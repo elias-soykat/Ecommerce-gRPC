@@ -1,36 +1,59 @@
 {
-  "name": "grpc-server",
+  "name": "ecommerce-grpc-microservices",
   "version": "1.0.0",
-  "description": "gRPC server with Sequelize ORM",
-  "main": "src/server.js",
+  "description": "Production-ready microservice-based eCommerce application using gRPC",
+  "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "migrate": "npx sequelize-cli db:migrate",
-    "seed": "npx sequelize-cli db:seed:all",
-    "migrate:undo": "npx sequelize-cli db:migrate:undo",
-    "seed:undo": "npx sequelize-cli db:seed:undo:all"
-  },
-  "dependencies": {
-    "@grpc/grpc-js": "^1.9.0",
-    "@grpc/proto-loader": "^0.7.0",
-    "sequelize": "^6.35.0",
-    "pg": "^8.11.0",
-    "pg-hstore": "^2.3.4",
-    "sequelize-cli": "^6.6.0",
-    "dotenv": "^16.3.0",
-    "bcrypt": "^5.1.0",
-    "jsonwebtoken": "^9.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.0"
+    "start": "docker compose up --build",
+    "stop": "docker compose down",
+    "restart": "docker compose restart",
+    "logs": "docker compose logs -f",
+    "build": "docker compose build --no-cache",
+    "clean": "docker compose down -v --remove-orphans",
+    "test": "node test-services.js",
+    "status": "docker compose ps",
+    "user-logs": "docker compose logs -f user-service",
+    "product-logs": "docker compose logs -f product-service",
+    "order-logs": "docker compose logs -f order-service",
+    "db-logs": "docker compose logs -f postgres-user postgres-product postgres-order",
+    "install-deps": "npm run install-deps:user && npm run install-deps:product && npm run install-deps:order",
+    "install-deps:user": "cd user-service && npm install",
+    "install-deps:product": "cd product-service && npm install",
+    "install-deps:order": "cd order-service && npm install",
+    "dev": "concurrently \"npm run dev:user\" \"npm run dev:product\" \"npm run dev:order\"",
+    "dev:user": "cd user-service && npm run dev",
+    "dev:product": "cd product-service && npm run dev",
+    "dev:order": "cd order-service && npm run dev"
   },
   "keywords": [
     "grpc",
-    "sequelize",
+    "microservices",
+    "ecommerce",
+    "nodejs",
     "postgresql",
-    "microservices"
+    "sequelize",
+    "docker",
+    "docker compose"
   ],
-  "author": "",
-  "license": "MIT"
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/ecommerce-grpc-microservices.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/ecommerce-grpc-microservices/issues"
+  },
+  "homepage": "https://github.com/yourusername/ecommerce-grpc-microservices#readme",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.4",
+    "@grpc/proto-loader": "^0.7.15"
+  }
 }

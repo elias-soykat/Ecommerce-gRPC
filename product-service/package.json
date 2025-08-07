@@ -1,0 +1,28 @@
+{
+  "name": "product-service",
+  "version": "1.0.0",
+  "description": "Product microservice for eCommerce application",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.9.0",
+    "@grpc/proto-loader": "^0.7.0",
+    "pg": "^8.11.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.32.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "keywords": [
+    "grpc",
+    "microservice",
+    "product",
+    "ecommerce"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

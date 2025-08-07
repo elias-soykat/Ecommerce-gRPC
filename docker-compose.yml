@@ -1,57 +1,168 @@
 services:
-  db:
-    image: postgres:15
-    restart: always
+  # User Service Database
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: postgres-user
     environment:
+      POSTGRES_DB: user_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ecommerce
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
+  # Product Service Database
+  postgres-product:
+    image: postgres:15-alpine
+    container_name: postgres-product
     environment:
-      - NODE_ENV=development
-      - DB_HOST=db
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_product_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Order Service Database
+  postgres-order:
+    image: postgres:15-alpine
+    container_name: postgres-order
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_order_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres-user
+      - DB_PORT=5432
+      - DB_NAME=user_db
       - DB_USER=postgres
-      - DB_PASS=postgres
-      - DB_NAME=ecommerce
-      - JWT_SECRET=supersecret
+      - DB_PASSWORD=password
       - PORT=50051
-    depends_on:
-      db:
-        condition: service_healthy
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     ports:
       - "50051:50051"
-    volumes:
-      - ./src:/app/src
-      - ./proto:/app/proto
-    command: >
-      sh -c "npx sequelize-cli db:migrate && npm run dev"
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    ports:
-      - "5050:80"
     depends_on:
-      db:
+      postgres-user:
         condition: service_healthy
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Product Service
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres-product
+      - DB_PORT=5432
+      - DB_NAME=product_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - PORT=50052
+    ports:
+      - "50052:50052"
+    depends_on:
+      postgres-product:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Order Service
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres-order
+      - DB_PORT=5432
+      - DB_NAME=order_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - PORT=50053
+      - USER_SERVICE_HOST=user-service
+      - USER_SERVICE_PORT=50051
+      - PRODUCT_SERVICE_HOST=product-service
+      - PRODUCT_SERVICE_PORT=50052
+    ports:
+      - "50053:50053"
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
-  db_data:
-  pgadmin_data:
+  postgres_user_data:
+    driver: local
+  postgres_product_data:
+    driver: local
+  postgres_order_data:
+    driver: local
+
+networks:
+  ecommerce-network:
+    driver: bridge
