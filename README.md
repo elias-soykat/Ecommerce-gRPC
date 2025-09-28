@@ -1,6 +1,6 @@
 # Ecommerce gRPC Microservices
 
-A production-ready, microservice-based eCommerce application built with Node.js, gRPC, PostgreSQL, and Docker.
+A production-ready, microservice-based eCommerce application built with Node.js, gRPC, PostgreSQL, and Docker
 
 ## Architecture
 
